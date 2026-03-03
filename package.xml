@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>Main</name>
+  <version>0.0.0</version>
+  <description>The Main package for Autonomous Driving</description>
+
+  <maintainer email="autonav@todo.todo">autonav</maintainer>
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  
+  <!-- 공통 의존성 -->
+  <depend>roscpp</depend>
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>rospack</depend>
+
+
+  <!-- 외부 커스텀 메시지 패키지 -->
+  <depend>morai_msgs</depend>
+
+  <export>
+  </export>
+</package>
