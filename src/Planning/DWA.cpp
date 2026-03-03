@@ -164,7 +164,7 @@ void GetCandTotalScore (vector<Candidate>& cand_vec, const MinMax& m){
         double norm_dist_score = (cand.score_dist - m.min_dist_score) / range_dist;
 
         // 2. 헤딩 점수 정규화
-        double norm_heading_score = (m.max_heading_score - cand.score_heading) / range_heading;
+        double norm_heading_score = (cand.score_heading - m.min_heading_score) / range_heading;
 
         // 3. 속도 점수 정규화
         double norm_velocity_score = (cand.score_velocity - m.min_velocity_score) / range_velocity;
@@ -229,8 +229,8 @@ double GetDistScore (const vector<GlobalPath>& global_path_vec, const EgoPose& e
 }
 
 double GetVelocityScore (const Candidate& cand) {
-    double target_vel = KPH2MPS(40.0);
-    return fabs(cand.v - target_vel);
+    double target_vel = KPH2MPS(45.0);
+    return -fabs(cand.v - target_vel);
 }
 
 // ================================== Stanley 조향각 계산 ================================== //
