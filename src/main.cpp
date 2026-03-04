@@ -9,6 +9,10 @@ EgoSpec spec;
 vector<Candidate> cand_vec;
 EgoStatus ego_status;
 EgoPose ego_pose;
+VehicleState ego_state;
+Method1State m1_state;
+Method2State m2_state;
+
 morai_msgs::EgoVehicleStatus::ConstPtr ego_msg;
 
 ros::Subscriber sub_ego;
@@ -26,6 +30,21 @@ void EgoCallback(const morai_msgs::EgoVehicleStatus::ConstPtr& msg) {
     ego_msg = msg;
     ego_status.v = msg->velocity.x;
     // 필요하다면 w도 업데이트 (IMU나 차량 모델 기반)
+
+    ego_state.vx = max(fabs(msg->velocity.x), 0.001);
+    ego_state.ax = msg->acceleration.x;
+    ego_state.ay = msg->acceleration.y;
+    ego_state.steer_angle = Deg2Rad(msg->wheel_angle);
+
+    static double prev_yaw_rate = 0.0;
+    ego_state.yaw_rate = ego_state.vx * tan(ego_state.steer_angle) / (Lf + Lr);
+    // ego_state.yaw_accel = (ego_state.yaw_rate - prev_yaw_rate) / trfe_dt;
+
+    double raw_yaw_accel = (ego_state.yaw_rate - prev_yaw_rate) / trfe_dt;
+    // 이전 yaw_accel 값을 80% 유지하고, 새로운 변화량을 20%만 반영 (가중치는 튜닝 가능)
+    ego_state.yaw_accel = (ego_state.yaw_accel * 0.8) + (raw_yaw_accel * 0.2);
+    
+    prev_yaw_rate = ego_state.yaw_rate;
 }
 
 void GPSCallback(const morai_msgs::GPSMessage::ConstPtr& msg) {
@@ -62,6 +81,7 @@ void MainProcess (vector<Candidate>& cand_vec, const EgoStatus& ego_status, cons
     if (!ego_msg) return; // 데이터 수신 대기
     DwaProcess(cand_vec, ego_msg, spec, ego_pose, global_path_vec);
     ControlProcess(cand_vec, ego_status, ctrl_input, cmd_msg);
+    TRFEProcess();
 
     // 3. 시각화 함수들 호출
     if (!cand_vec.empty()) {

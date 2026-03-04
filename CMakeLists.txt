@@ -31,6 +31,7 @@ add_executable(${PROJECT_NAME}_node
   src/Planning/DWA.cpp
   src/Control/Control.cpp
   src/Visualizer/Visualizer.cpp
+  src/Planning/TRFE.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_node

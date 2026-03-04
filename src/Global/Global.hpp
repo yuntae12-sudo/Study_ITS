@@ -49,6 +49,15 @@ const double W_heading = 0.3;
 const double W_velocity = 0.3;
 
 
+// TRFE 파라미터
+const double m = 1905.2;
+const double Lf = 1.3;
+const double Lr = 1.7;
+const double g = 9.81;
+const double Cf = 127092.0;
+const double Cr = 97188.0;
+const double trfe_dt = 0.02;
+
 // ========================= 구조체 정의 ========================= //
 
 struct GlobalPath { double e, n, u; };
@@ -106,22 +115,35 @@ struct MinMax {
     double max_velocity_score = -1e9, min_velocity_score = 1e9;
 };
 
-struct way_1 {
-    double a_front;
-    double a_rear;
-    
-    double a_t_front;
-    double a_t_rear;
-    double a_t_cg;
-    
-    double a_t_max;
+struct VehicleState {
+    double vx = 0.001; 
+    double ax = 0.0;
+    double ay = 0.0;
+    double yaw_rate = 0.0;
+    double yaw_accel = 0.0;
+    double steer_angle = 0.0;
+};
+
+struct Method1State {
+    double a_t_front = 0.0;
+    double a_t_rear = 0.0;
+    double a_t_cg = 0.0;
+    double a_t_max = 0.0;
+    double a_t_comp = 0.0;
+};
+
+struct Method2State {
+    double w_high = 0.765; // 초기 확률 반반으로 설정
+    double w_low = 0.135;
 };
 
 // ========================= 구조체 선언 ========================= //
 extern vector<GlobalPath> global_path_vec;
 extern VectorSpace Space;
 extern vector<EgoPose> ego_pose_vec; 
-
+extern VehicleState ego_state;
+extern Method1State m1_state;
+extern Method2State m2_state;
 
 
 // ========================= 함수 정의 ========================= //

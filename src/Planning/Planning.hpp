@@ -21,5 +21,9 @@ double GetStanleyAngle (const vector<GlobalPath>& global_path_vec, const EgoPose
 
 
 // =================================== TRFE 관련 함수 =================================== //
+double TRFEProcess();
+double Method_1();
+double Method_2();
+
 
 #endif
