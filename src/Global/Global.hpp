@@ -44,9 +44,9 @@ const double ref_alt = 0.0;
 const double wheel_base = 3.0;
 
 // 가중치 (거리, 헤딩, 속도)
-const double W_dist = 0.5;
+const double W_dist = 1.0;
 const double W_heading = 0.3;
-const double W_velocity = 0.2;
+const double W_velocity = 0.3;
 
 
 // ========================= 구조체 정의 ========================= //

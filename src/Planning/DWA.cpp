@@ -64,11 +64,15 @@ void GenerateLocalPath (vector<Candidate>& cand_vec, const morai_msgs::EgoVehicl
 
     // 예측 시간 설정
     double tp_min = 0.5, tp_max = 2.0, tp_step = 0.5;
-    double Ld = max(2.0, curr_status.v * 0.5); 
-    double base_steer = GetStanleyAngle(global_path_vec, ego_pose, Ld);
+    // double Ld = max(2.0, curr_status.v * 0.5); 
+    // double base_steer = GetStanleyAngle(global_path_vec, ego_pose, Ld);
 
     // Loop 1: 속도
     for(double v = space.min_v; v <= space.max_v; v += 0.2) {
+
+        double Ld = max(2.0, curr_status.v * 0.5); 
+        double base_steer = GetStanleyAngle(global_path_vec, ego_pose, Ld);
+        
         // Loop 2: 예측 시간 -> 논문 방식 인용하여 짧은 거리부터 먼 거리까지 다양한 길이의 경로 생성
         for(double tp = tp_min; tp <= tp_max; tp += tp_step) {
             // Loop 3: 조향 오프셋
@@ -164,7 +168,7 @@ void GetCandTotalScore (vector<Candidate>& cand_vec, const MinMax& m){
         double norm_dist_score = (cand.score_dist - m.min_dist_score) / range_dist;
 
         // 2. 헤딩 점수 정규화
-        double norm_heading_score = (m.max_heading_score - cand.score_heading) / range_heading;
+        double norm_heading_score = (cand.score_heading - m.min_heading_score) / range_heading;
 
         // 3. 속도 점수 정규화
         double norm_velocity_score = (cand.score_velocity - m.min_velocity_score) / range_velocity;
@@ -230,7 +234,7 @@ double GetDistScore (const vector<GlobalPath>& global_path_vec, const EgoPose& e
 
 double GetVelocityScore (const Candidate& cand) {
     double target_vel = KPH2MPS(40.0);
-    return fabs(cand.v - target_vel);
+    return -fabs(cand.v - target_vel);
 }
 
 // ================================== Stanley 조향각 계산 ================================== //
