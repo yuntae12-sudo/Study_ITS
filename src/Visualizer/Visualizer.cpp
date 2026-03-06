@@ -129,23 +129,26 @@ void publishDynamicWindow(double v_min, double v_max, double w_min, double w_max
     m.scale.x = 0.15; // 선 두께
     m.color.r = 1.0; m.color.g = 1.0; m.color.b = 0.0; m.color.a = 0.8; // 노란색
 
-    // 1. 물리적 도달 거리 계산 (X축: 전방)
-    double d_near = v_min * predict_time;
-    double d_far  = v_max * predict_time;
+    // 후보 경로 생성(generateTrajectoryPoints)과 동일한 적분 방식을 사용하여 끝점을 계산하는 람다 함수
+    auto getEndPoint = [](double v, double w, double total_time) {
+        double x = 0.0, y = 0.0, yaw = 0.0;
+        double dt = 0.1;
+        for (double t = 0; t <= total_time; t += dt) {
+            x += v * cos(yaw) * dt;
+            y += v * sin(yaw) * dt;
+            yaw += w * dt;
+        }
+        geometry_msgs::Point p;
+        p.x = x; p.y = y; p.z = 0.0;
+        return p;
+    };
 
-    // 2. 각속도에 의한 회전각 계산 (Yaw: 좌우 벌어짐)
-    // predict_time 동안 w의 속도로 회전했을 때 도달하는 각도
-    double yaw_L = w_max * predict_time;
-    double yaw_R = w_min * predict_time;
-
-    // 3. 네 꼭짓점 정의 (삼각함수를 이용한 실제 위치 투영)
-    geometry_msgs::Point p1, p2, p3, p4;
-    
+    // 1. 네 꼭짓점 정의 (v, w의 최소/최대 조합에 대한 최종 도달 위치)
     // 근거리 좌(p1), 원거리 좌(p2), 원거리 우(p3), 근거리 우(p4)
-    p1.x = d_near * cos(yaw_L); p1.y = d_near * sin(yaw_L); p1.z = 0.0;
-    p2.x = d_far  * cos(yaw_L); p2.y = d_far  * sin(yaw_L); p2.z = 0.0;
-    p3.x = d_far  * cos(yaw_R); p3.y = d_far  * sin(yaw_R); p3.z = 0.0;
-    p4.x = d_near * cos(yaw_R); p4.y = d_near * sin(yaw_R); p4.z = 0.0;
+    geometry_msgs::Point p1 = getEndPoint(v_min, w_max, predict_time);
+    geometry_msgs::Point p2 = getEndPoint(v_max, w_max, predict_time);
+    geometry_msgs::Point p3 = getEndPoint(v_max, w_min, predict_time);
+    geometry_msgs::Point p4 = getEndPoint(v_min, w_min, predict_time);
 
     // 사각형 그리기
     m.points.push_back(p1);

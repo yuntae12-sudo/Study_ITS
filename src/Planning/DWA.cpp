@@ -87,6 +87,8 @@ void GenerateLocalPath (vector<Candidate>& cand_vec, const morai_msgs::EgoVehicl
 
                 double candidate_w = (v / wheel_base) * tan(candidate_steer);
 
+                if(v < space.min_v || v > space.max_v || candidate_w < space.min_w || candidate_w > space.max_w) continue;
+
                 cand.v = v;
                 cand.tp = tp;
                 cand.steer_angle = candidate_steer;

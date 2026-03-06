@@ -29,20 +29,35 @@ ros::Publisher dwa_visual_pub;
 void EgoCallback(const morai_msgs::EgoVehicleStatus::ConstPtr& msg) {
     ego_msg = msg;
     ego_status.v = msg->velocity.x;
-    // 필요하다면 w도 업데이트 (IMU나 차량 모델 기반)
 
     ego_state.vx = max(fabs(msg->velocity.x), 0.001);
-    ego_state.ax = msg->acceleration.x;
-    ego_state.ay = msg->acceleration.y;
     ego_state.steer_angle = Deg2Rad(msg->wheel_angle);
 
-    static double prev_yaw_rate = 0.0;
-    ego_state.yaw_rate = ego_state.vx * tan(ego_state.steer_angle) / (Lf + Lr);
-    // ego_state.yaw_accel = (ego_state.yaw_rate - prev_yaw_rate) / trfe_dt;
+    // [수정] 1. 센서 스파이크를 잡기 위한 종/횡가속도 LPF 적용
+    static double filtered_ax = 0.0;
+    static double filtered_ay = 0.0;
+    
+    if (filtered_ax == 0.0 && filtered_ay == 0.0) {
+        filtered_ax = msg->acceleration.x;
+        filtered_ay = msg->acceleration.y;
+    }
 
+    // 새 데이터 10% + 기존 데이터 90% (시뮬레이터 노이즈 상쇄)
+    filtered_ax = (0.1 * msg->acceleration.x) + (0.9 * filtered_ax);
+    filtered_ay = (0.1 * msg->acceleration.y) + (0.9 * filtered_ay);
+    
+    ego_state.ax = filtered_ax;
+    ego_state.ay = filtered_ay;
+
+    // [수정] 2. 수식 기반 yaw_rate 연산 삭제
+    // ego_state.yaw_rate = ego_state.vx * tan(ego_state.steer_angle) / (Lf + Lr); <- 삭제!
+
+    // 3. IMU에서 받아온 실제 yaw_rate를 미분하여 yaw_accel 연산
+    static double prev_yaw_rate = 0.0;
     double raw_yaw_accel = (ego_state.yaw_rate - prev_yaw_rate) / trfe_dt;
-    // 이전 yaw_accel 값을 80% 유지하고, 새로운 변화량을 20%만 반영 (가중치는 튜닝 가능)
-    ego_state.yaw_accel = (ego_state.yaw_accel * 0.8) + (raw_yaw_accel * 0.2);
+    
+    // 미분 특성상 튀는 값이 생기므로 강력한 필터(90% 유지) 적용
+    ego_state.yaw_accel = (ego_state.yaw_accel * 0.9) + (raw_yaw_accel * 0.1);
     
     prev_yaw_rate = ego_state.yaw_rate;
 }
@@ -53,6 +68,7 @@ void GPSCallback(const morai_msgs::GPSMessage::ConstPtr& msg) {
 
 void IMUCallback(const sensor_msgs::Imu::ConstPtr& msg) {
     yawTf(msg, ego_pose);
+    ego_state.yaw_rate = msg->angular_velocity.z;
 }
 
 bool PathCheck() {
