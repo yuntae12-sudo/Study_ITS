@@ -133,8 +133,9 @@ struct Method1State {
 };
 
 struct Method2State {
-    double w_high = 0.765; // 초기 확률 반반으로 설정
-    double w_low = 0.135;
+    double w_high = 1.0;
+    double w_mid = 0.0;
+    double w_low = 0.0;
 };
 
 // ========================= 구조체 선언 ========================= //
