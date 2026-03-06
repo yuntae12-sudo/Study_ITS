@@ -41,7 +41,7 @@ double ClampPID (double PID) {
 bool LoadPath() {
     if(!global_path_vec.empty()) { return true; }
 
-    string file_path = "/home/autonav/ITS_ws/src/Map/path.txt";
+    string file_path = "/home/autonav/Study_ITS/src/Map/path.txt";
 
     ifstream inputFile;
     inputFile.open(file_path);
