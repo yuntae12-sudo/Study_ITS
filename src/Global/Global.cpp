@@ -1,4 +1,4 @@
-#include "Global/Global.hpp"
+#include "Global.hpp"
 
 vector<GlobalPath> global_path_vec;
 
@@ -65,10 +65,19 @@ bool LoadPath() {
 
 // ========================================== Find Idx ========================================== //
 int FindClosestIdx (const vector<GlobalPath>& global_path_vec, const EgoPose& ego_pose) {
-    int closest_idx = 0;
+    // [수정] 연산량 증가로 인한 현재 위치 주변만을 탐색
+    if (global_path_vec.empty()) return -1;
+
+    // 이전 인덱스를 기억해서 그 근처만 찾음
+    static int prev_idx = 0; 
+    int closest_idx = prev_idx;
     double min_d = -1.0;
 
-    for(int i = 0; i < global_path_vec.size(); i++) {
+    // 뒤로 20칸, 앞으로 100칸 정도만 탐색 
+    int start_idx = max(0, prev_idx - 20);
+    int end_idx = min((int)global_path_vec.size(), prev_idx + 100);
+
+    for(int i = start_idx; i < end_idx; i++) {
         double de = global_path_vec[i].e - ego_pose.curr_e;
         double dn = global_path_vec[i].n - ego_pose.curr_n;
         double d = GetDist(de, dn);
@@ -78,6 +87,8 @@ int FindClosestIdx (const vector<GlobalPath>& global_path_vec, const EgoPose& eg
             closest_idx = i;
         }
     }
+    
+    prev_idx = closest_idx; // 다음 번을 위해 기억
     return closest_idx;
 }
 
@@ -88,12 +99,19 @@ int FindWaypointIdx (const vector<GlobalPath>& global_path_vec, const EgoPose eg
     }
 
     int closest_idx = FindClosestIdx(global_path_vec, ego_pose);
-    for(int i = closest_idx; i < global_path_vec.size(); ++i) {
-        double de = global_path_vec[i].e - ego_pose.curr_e;
-        double dn = global_path_vec[i].n - ego_pose.curr_n;
-        double d = GetDist(de, dn);
+    if(closest_idx == -1) return -1;
+    double accumulated_dist = 0.0;
 
-        if(d > Ld) { return i; }
+    // [수정] waypoint와 직선거리가 아닌 궤적에 따른 거리 계산
+    for(int i = closest_idx; i < (int)global_path_vec.size() - 1; ++i) {
+        double dx = global_path_vec[i+1].e - global_path_vec[i].e;
+        double dy = global_path_vec[i+1].n - global_path_vec[i].n;
+        accumulated_dist += GetDist(dx, dy);
+
+        // 경로를 따라 걸어간 거리가 Ld를 넘는 순간의 인덱스를 반환
+        if(accumulated_dist >= Ld) { 
+            return i + 1; 
+        }
     }
     return global_path_vec.size() -1;
 }

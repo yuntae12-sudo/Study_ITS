@@ -37,3 +37,16 @@ add_executable(${PROJECT_NAME}_node
 target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
 )
+
+add_executable(path_maker src/path_maker.cpp)
+
+# 2. 라이브러리 링크
+# path_maker 노드가 ROS 및 morai_msgs 라이브러리를 사용하도록 연결합니다.
+target_link_libraries(path_maker
+  ${catkin_LIBRARIES}
+)
+
+# 3. (선택사항) 메시지 생성 의존성 추가
+# morai_msgs와 같은 커스텀 메시지를 사용하는 경우, 
+# 메시지가 먼저 빌드된 후 코드가 컴파일되도록 순서를 보장합니다.
+add_dependencies(path_maker ${catkin_EXPORTED_TARGETS} ${morai_msgs_EXPORTED_TARGETS})

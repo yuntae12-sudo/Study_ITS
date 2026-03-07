@@ -58,6 +58,7 @@ const double Cf = 127092.0;
 const double Cr = 97188.0;
 const double trfe_dt = 0.02;
 
+
 // ========================= 구조체 정의 ========================= //
 
 struct GlobalPath { double e, n, u; };

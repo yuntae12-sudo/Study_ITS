@@ -95,9 +95,9 @@ void InitPubSub (ros::NodeHandle& n) {
 void MainProcess (vector<Candidate>& cand_vec, const EgoStatus& ego_status, const EgoSpec& spec, morai_msgs::CtrlCmd& cmd_msg, const vector<GlobalPath>& global_path_vec, const EgoPose& ego_pose) {
     ControlInput ctrl_input;
     if (!ego_msg) return; // 데이터 수신 대기
-    DwaProcess(cand_vec, ego_msg, spec, ego_pose, global_path_vec);
-    ControlProcess(cand_vec, ego_status, ctrl_input, cmd_msg);
-    TRFEProcess();
+    double mu_final=TRFEProcess();
+    DwaProcess(cand_vec, ego_msg, spec, ego_pose, global_path_vec,mu_final);
+    ControlProcess(cand_vec, ego_status, ctrl_input, cmd_msg); 
 
     // 3. 시각화 함수들 호출
     if (!cand_vec.empty()) {

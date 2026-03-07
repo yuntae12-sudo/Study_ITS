@@ -5,17 +5,20 @@
 #include "Visualizer/Visualizer.hpp"
 
 // =================================== DWA 관련 함수 =================================== //
-void DwaProcess (vector<Candidate>& cand_vec, const morai_msgs::EgoVehicleStatus::ConstPtr& ego, const EgoSpec& spec, const EgoPose& ego_pose, const vector<GlobalPath>& global_path_vec);
-VectorSpace GetVelocityVectorSpace (const morai_msgs::EgoVehicleStatus::ConstPtr& ego, const EgoSpec& spec, EgoStatus& ego_status);
-void GenerateLocalPath (vector<Candidate>& cand_vec, const morai_msgs::EgoVehicleStatus::ConstPtr& ego, const EgoSpec& spec, const EgoPose& ego_pose, const vector<GlobalPath>& global_path_vec);
-void EvaluateLocalPath (vector<Candidate>& cand_vec, const EgoPose& ego_pose, const vector<GlobalPath>& global_path_vec, MinMax& minmax, const EgoSpec& spec); 
+void DwaProcess (vector<Candidate>& cand_vec, const morai_msgs::EgoVehicleStatus::ConstPtr& ego, const EgoSpec& spec, const EgoPose& ego_pose, const vector<GlobalPath>& global_path_vec,double mu_final);
+VectorSpace GetVelocityVectorSpace (const morai_msgs::EgoVehicleStatus::ConstPtr& ego, const EgoSpec& spec, EgoStatus& ego_status,double mu_final);
+void GenerateLocalPath (vector<Candidate>& cand_vec, const morai_msgs::EgoVehicleStatus::ConstPtr& ego, const EgoSpec& spec, const EgoPose& ego_pose, const vector<GlobalPath>& global_path_vec, double mu_final);
+void EvaluateLocalPath (vector<Candidate>& cand_vec, const EgoPose& ego_pose, const vector<GlobalPath>& global_path_vec, MinMax& minmax, const EgoSpec& spec, double mu_final, const morai_msgs::EgoVehicleStatus::ConstPtr& ego); 
 void CalcObjectScore (vector<Candidate>& cand_vec, const EgoPose& ego_pose, const vector<GlobalPath>& global_path_vec, MinMax& m);
 void GetCandTotalScore (vector<Candidate>& cand_vec, const MinMax& m);
 Candidate SelectBestLocalPath (const vector<Candidate>& cand_vec);
 double GetHeadingScore (const vector<GlobalPath>& global_path_vec, const EgoPose& ego_pose, Candidate& cand, const EgoSpec& spec); 
 double GetDistScore (const vector<GlobalPath>& global_path_vec, const EgoPose& ego_pose, const Candidate& cand);
-double GetVelocityScore (const Candidate& cand);
+double GetVelocityScore (const Candidate& cand, const EgoPose& ego_pose, const vector<GlobalPath>& global_path_vec, double mu_final, const morai_msgs::EgoVehicleStatus::ConstPtr& ego);
 double GetStanleyAngle (const vector<GlobalPath>& global_path_vec, const EgoPose& ego_pose, const double Ld);
+double GetDistErr (const vector<GlobalPath>& global_path_vec, const EgoPose& ego_pose);
+bool IsCorner(const EgoPose& ego_pose, const vector<GlobalPath>& global_path_vec);
+double FilterAndRememberMu(double mu_final, const EgoPose& ego_pose, const morai_msgs::EgoVehicleStatus::ConstPtr& ego);
 
 
 

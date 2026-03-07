@@ -49,7 +49,7 @@ double Method_1() {
 
     // 5. 마찰계수 추정 (2-State: 0.85 or 0.4) [cite: 97, 170]
     static double mu_m1 = 0.765; 
-    if (m1_state.a_t_comp >= 0.55) { // High Mu Threshold [cite: 170, 175]
+    if (m1_state.a_t_comp >= 0.45) { // High Mu Threshold [cite: 170, 175]
         mu_m1 = 0.765;
     } else if (m1_state.a_t_comp <= 0.3) { // Low Mu Threshold [cite: 170, 176]
         mu_m1 = 0.3;
@@ -75,7 +75,7 @@ double Method_2() {
 
     // 4. Bayesian 확률 연산 (2-State 가중치 업데이트)
     if(fabs(gamma_ss) > 0.1) {
-        double S = 0.05; // Error covariance [cite: 365]
+        double S = 0.15; // Error covariance [cite: 365]
         // 가우시안 확률 밀도 함수 (논문 식 15) [cite: 360]
         double p_high = exp(-0.5 * pow(gamma_ay - gamma_high, 2) / S) / sqrt(2 * M_PI * S);
         double p_low  = exp(-0.5 * pow(gamma_ay - gamma_low, 2) / S) / sqrt(2 * M_PI * S);
