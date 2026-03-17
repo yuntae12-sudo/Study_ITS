@@ -2,9 +2,9 @@
 //코너 파라미터
 bool not_first=false;
 double mu=0.0;
-double mu_prev=0.5;
+double mu_prev=0.3;
 double filtered_mu = 0.765;     
-double corner_mu_memory = 0.5;  
+double corner_mu_memory = 0.3;  
 int low_mu_counter = 0;         
 int high_mu_counter = 0;         
 
@@ -43,7 +43,7 @@ VectorSpace GetVelocityVectorSpace (const morai_msgs::EgoVehicleStatus::ConstPtr
     } else {
         ego_status.w = (ego_status.v / wheel_base) * tan(steer_angle_rad);
     }
-    double mu_ratio=mu_final/0.765;
+    double mu_ratio= mu_final/0.765;
     if (mu_ratio > 1.0) mu_ratio = 1.0;
     if (mu_ratio < 0.1) mu_ratio = 0.1;
     double k_safe_accel = 0.6; 
@@ -279,7 +279,7 @@ double GetDistScore (const vector<GlobalPath>& global_path_vec, const EgoPose& e
 double GetVelocityScore (const Candidate& cand, const EgoPose& ego_pose, const vector<GlobalPath>& global_path_vec, double mu_final, const morai_msgs::EgoVehicleStatus::ConstPtr& ego) {
     //코너/직선에 따라 목표 속도 설정
     double max_vel = KPH2MPS(40.0); 
-    double min_vel = KPH2MPS(17.0); 
+    double min_vel = KPH2MPS(20.0); 
     if(!not_first){
         mu=0.3;
         if(IsCorner(ego_pose,global_path_vec)){
@@ -289,18 +289,21 @@ double GetVelocityScore (const Candidate& cand, const EgoPose& ego_pose, const v
     else {
         mu=mu_final;
     }
-    double mu_ratio=mu/0.765;
-    if (mu_ratio > 1.0) mu_ratio = 1.0;
-    if (mu_ratio < 0.1) mu_ratio = 0.1;
+    double mu_ratio= mu/0.765;
     double mu_prev=FilterAndRememberMu(mu_final, ego_pose, ego);
     cout<<"mu_prev: "<<mu_prev<<endl;
     if(IsCorner(ego_pose,global_path_vec)){
-        max_vel = KPH2MPS(40.0)*mu_prev; 
-        min_vel = KPH2MPS(17.0)*mu_prev; 
+        mu_ratio=(mu_prev+0.2/0.765)*0.75;
+        if (mu_ratio > 1.0) mu_ratio = 1.0;
+        if (mu_ratio < 0.1) mu_ratio = 0.1;
+        max_vel = KPH2MPS(40.0)*mu_ratio; 
+        min_vel = KPH2MPS(20.0)*mu_ratio; 
     }
     else {
+        if (mu_ratio > 1.0) mu_ratio = 1.0;
+        if (mu_ratio < 0.1) mu_ratio = 0.1;
         max_vel = KPH2MPS(40.0)*mu_ratio; 
-        min_vel = KPH2MPS(17.0)*mu_ratio; 
+        min_vel = KPH2MPS(20.0)*mu_ratio; 
     }
 
     double base_steer = GetStanleyAngle(global_path_vec, ego_pose, 15.0); 
@@ -333,13 +336,13 @@ bool IsCorner(const EgoPose& ego_pose, const vector<GlobalPath>& global_path_vec
 
     double path_yaw = atan2(dn, de);
     double yaw_err = fabs(NormalizeAngle(path_yaw - ego_pose.curr_yaw));
-    return yaw_err>1.3;
+    return yaw_err>1.1;
 }
 
 double FilterAndRememberMu(double mu_final, const EgoPose& ego_pose, const morai_msgs::EgoVehicleStatus::ConstPtr& ego) {
     // 1. EMA (Exponential Moving Average) 필터 적용 (튀는 값 깎아내기)
     // alpha 값이 작을수록 이전 값을 강하게 유지
-    double alpha = 0.05;
+    double alpha = 0.001;
     filtered_mu = alpha * mu_final + (1.0 - alpha) * filtered_mu;
     //cout<<filtered_mu<<endl;
 
@@ -350,23 +353,25 @@ double FilterAndRememberMu(double mu_final, const EgoPose& ego_pose, const morai
     // 3. 코너 구간에서만 마찰계수를 평가하고 메모리를 업데이트!
     if (in_corner) {
         // [저마찰 판단] 필터링된 값이 0.45 이하로 떨어지면 카운트 시작
-        if (filtered_mu < 0.45) {
+        if (filtered_mu < 0.35) {
             low_mu_counter++;
             high_mu_counter = 0; // 반대 카운터는 초기화
            
             // 진짜 저마찰이 15틱(예: 50Hz 기준 0.3초) 이상 지속되면 메모리에 확정 저장!
             if (low_mu_counter > 100) {
                 corner_mu_memory = filtered_mu; // 다음 코너를 위해 0.3으로 콱 박아둠
+                cout<<low_mu_counter<<", "<<high_mu_counter<<endl;
             }
         }
         // [고마찰 판단] 필터링된 값이 0.65 이상으로 올라가면 카운트 시작
-        else if (filtered_mu > 0.55) {
+        else if (filtered_mu > 0.7) {
             high_mu_counter++;
             low_mu_counter = 0;
            
             // 진짜 고마찰이 15틱 이상 지속되면 메모리 확정
             if (high_mu_counter > 200) {
                 corner_mu_memory = filtered_mu;
+                cout<<low_mu_counter<<", "<<high_mu_counter<<endl;
             }
         }
         //cout<<"high: "<< high_mu_counter<<" low: "<<low_mu_counter<<endl;
@@ -378,6 +383,7 @@ double FilterAndRememberMu(double mu_final, const EgoPose& ego_pose, const morai
         low_mu_counter = 0;
         high_mu_counter = 0;
     }
+    //cout<<mu_final<<", "<<filtered_mu<<", "<<Deg2Rad(fabs(ego->wheel_angle))<<", "<<corner_mu_memory<<endl;
 
 
     return corner_mu_memory; // DWA의 GetVelocityScore와 VectorSpace로 넘어갈 최종 값

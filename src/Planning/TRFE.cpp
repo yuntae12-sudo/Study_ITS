@@ -11,10 +11,10 @@ double TRFEProcess() {
     
     // 터미널 출력
     cout << fixed << setprecision(3);
-    cout << "[TRFE] 보정 총 가속도: " << m1_state.a_t_comp 
-         << " | Method 1 결과: " << method_1_mu 
-         << " | Method 2 결과: " << method_2_mu 
-         << " | Final mu: " << mu_final << endl;
+    //cout << "[TRFE] 보정 총 가속도: " << m1_state.a_t_comp 
+    //     << " | Method 1 결과: " << method_1_mu 
+    //     << " | Method 2 결과: " << method_2_mu 
+    //     << " | Final mu: " << mu_final << endl;
          
     return mu_final;
 }
